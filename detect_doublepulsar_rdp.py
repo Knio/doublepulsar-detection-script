@@ -39,7 +39,7 @@ def print_status(ip, message):
     global print_lock
 
     with print_lock:
-        print "[*] [%s] %s" % (ip, message)
+        print("[*] [%s] %s" % (ip, message))
 
 
 def check_ip(ip):
@@ -91,7 +91,7 @@ def check_ip(ip):
     # Server requires NLA which implant does not support
     elif len(negotiation_response) >= 19 and negotiation_response[11] == "\x03" and negotiation_response[15] == "\x05":
         with print_lock:
-            print "[-] [%s] Server requires NLA, which DOUBLEPULSAR does not support" % ip
+            print("[-] [%s] Server requires NLA, which DOUBLEPULSAR does not support" % ip)
 
         s.close()
         return
@@ -115,13 +115,13 @@ def check_ip(ip):
 
         with print_lock:
             if len(ping_response) == 288:
-                print "[+] [%s] DOUBLEPULSAR RDP IMPLANT DETECTED!!!" % ip
+                print("[+] [%s] DOUBLEPULSAR RDP IMPLANT DETECTED!!!" % ip)
             else:
-                print "[-] [%s] Status Unknown - Response received but length was %d not 288" % (ip, len(ping_response))
+                print("[-] [%s] Status Unknown - Response received but length was %d not 288" % (ip, len(ping_response)))
         s.close()
     except socket.error as e:
         with print_lock:
-            print "[-] [%s] No presence of DOUBLEPULSAR RDP implant" % ip
+            print("[-] [%s] No presence of DOUBLEPULSAR RDP implant" % ip)
 
 
 def threaded_check(ip_address):
@@ -131,7 +131,7 @@ def threaded_check(ip_address):
         check_ip(ip_address)
     except Exception as e:
         with print_lock:
-            print "[ERROR] [%s] - %s" % (ip_address, e)
+            print("[ERROR] [%s] - %s" % (ip_address, e))
     finally:
         semaphore.release()
 

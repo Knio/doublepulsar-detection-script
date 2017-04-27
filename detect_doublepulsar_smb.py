@@ -13,6 +13,7 @@ session_setup_request = binascii.unhexlify("00000088ff534d4273000000001807c00000
 tree_connect_request = binascii.unhexlify("00000060ff534d4275000000001807c00000000000000000000000000000fffe0008400004ff006000080001003500005c005c003100390032002e003100360038002e003100370035002e003100320038005c00490050004300240000003f3f3f3f3f00")
 trans2_session_setup = binascii.unhexlify("0000004eff534d4232000000001807c00000000000000000000000000008fffe000841000f0c0000000100000000000000a6d9a40000000c00420000004e0001000e000d0000000000000000000000000000")
 
+
 # Arguments
 parser = argparse.ArgumentParser(description="Detect present of DOUBLEPULSAR SMB implant\n\nAuthor: Luke Jennings\nWebsite: https://countercept.com\nTwitter: @countercept", formatter_class=argparse.RawTextHelpFormatter)
 group = parser.add_mutually_exclusive_group(required=True)
@@ -46,7 +47,7 @@ def print_status(ip, message):
     global print_lock
 
     with print_lock:
-        print "[*] [%s] %s" % (ip, message)
+        print("[*] [%s] %s" % (ip, message))
 
 
 def check_ip(ip):
@@ -80,7 +81,7 @@ def check_ip(ip):
     modified_tree_connect_request = list(tree_connect_request)
     modified_tree_connect_request[32] = user_id[0]
     modified_tree_connect_request[33] = user_id[1]
-    modified_tree_connect_request = "".join(modified_tree_connect_request)
+    modified_tree_connect_request = bytes(modified_tree_connect_request)
 
     # Send tree connect request
     if verbose:
@@ -99,7 +100,7 @@ def check_ip(ip):
     modified_trans2_session_setup[29] = tree_id[1]
     modified_trans2_session_setup[32] = user_id[0]
     modified_trans2_session_setup[33] = user_id[1]
-    modified_trans2_session_setup = "".join(modified_trans2_session_setup)
+    modified_trans2_session_setup = bytes(modified_trans2_session_setup)
 
     # Send trans2 sessions setup request
     if verbose:
@@ -108,34 +109,34 @@ def check_ip(ip):
     final_response = s.recv(1024)
 
     # Check for 0x51 response to indicate DOUBLEPULSAR infection
-    if final_response[34] == "\x51":
+    if final_response[34] == 0x51:
         signature = final_response[18:26]
         signature_long = struct.unpack('<Q', signature)[0]
         key = calculate_doublepulsar_xor_key(signature_long)
         with print_lock:
-            print "[+] [%s] DOUBLEPULSAR SMB IMPLANT DETECTED!!! XOR Key: %s" % (ip, hex(key))
+            print("[+] [%s] DOUBLEPULSAR SMB IMPLANT DETECTED!!! XOR Key: %s" % (ip, hex(key)))
 
         if uninstall:
             # Update MID and op code via timeout
             modified_trans2_session_setup = list(modified_trans2_session_setup)
-            modified_trans2_session_setup[34] = "\x42"
-            modified_trans2_session_setup[49] = "\x0e"
-            modified_trans2_session_setup[50] = "\x69"
-            modified_trans2_session_setup[51] = "\x00"
-            modified_trans2_session_setup[52] = "\x00"
-            modified_trans2_session_setup = "".join(modified_trans2_session_setup)
+            modified_trans2_session_setup[34] = 0x42
+            modified_trans2_session_setup[49] = 0x0e
+            modified_trans2_session_setup[50] = 0x69
+            modified_trans2_session_setup[51] = 0x00
+            modified_trans2_session_setup[52] = 0x00
+            modified_trans2_session_setup = bytes(modified_trans2_session_setup)
 
             if verbose:
                 print_status(ip, "Sending trans2 session setup - uninstall/burn command")
             s.send(modified_trans2_session_setup)
             uninstall_response = s.recv(1024)
-            if uninstall_response[34] == "\x52":
+            if uninstall_response[34] == 0x52:
                 with print_lock:
-                    print "[+] [%s] DOUBLEPULSAR uninstall successful" % ip
+                    print("[+] [%s] DOUBLEPULSAR uninstall successful" % ip)
 
     else:
         with print_lock:
-            print "[-] [%s] No presence of DOUBLEPULSAR SMB implant" % ip
+            print("[-] [%s] No presence of DOUBLEPULSAR SMB implant" % ip)
 
     s.close()
 
@@ -147,7 +148,7 @@ def threaded_check(ip_address):
         check_ip(ip_address)
     except Exception as e:
         with print_lock:
-            print "[ERROR] [%s] - %s" % (ip_address, e)
+            print("[ERROR] [%s] - %s" % (ip_address, e))
     finally:
         semaphore.release()
 
